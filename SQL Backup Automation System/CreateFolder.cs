@@ -9,30 +9,39 @@ namespace SQL_Backup_Automation_System
 {
     public class CreateFolder
     {
-        public void CreateFolderAndFile(string folderPath, string fileName, string content)
+        public void CreateFolderAndFile(string folderPath, string fileName, string Pathcontent, string TimefileName, string Timecontent)
         {
             // Combine the folder path and file name to get the full file path
-            string filePath = Path.Combine(folderPath, fileName);
+            string FilePath = Path.Combine(folderPath, fileName);
+            String TimePath = Path.Combine(folderPath,TimefileName);
 
             // Check if the directory exists, if not, create it
             if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);
-                File.WriteAllText(filePath, content);
+                File.WriteAllText(FilePath, Pathcontent);
+                File.WriteAllText(TimePath, Timecontent);
             }
 
             
-            string Txtdata = File.ReadAllText(filePath);
+            string TxtPathdata = File.ReadAllText(FilePath);
+            string TxtTimedata = File.ReadAllText(TimePath);
 
 
-            if (string.IsNullOrEmpty(Txtdata))
+            if (string.IsNullOrEmpty(TxtPathdata))
             {
-                File.WriteAllText(filePath, content);
+                File.WriteAllText(FilePath, Pathcontent);
+                File.WriteAllText(TimePath, Timecontent);
             }
 
-            if (Txtdata != content)
+            if (TxtPathdata != Pathcontent)
             {
-                File.WriteAllText(filePath, content);
+                File.WriteAllText(FilePath, Pathcontent);      
+            }
+
+            if(TxtTimedata != Timecontent)
+            {
+                File.WriteAllText(TimePath, Timecontent);
             }
             
             

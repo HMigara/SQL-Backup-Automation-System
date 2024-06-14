@@ -21,11 +21,13 @@ namespace SQL_Backup_Automation_System
         private Datamodel model = new Datamodel(); // Assuming Datamodel class is defined with SettingsTime and SettingsFolderPath properties
         private int newTime = 0;
         private string newFilePath;
-        string content = null;
+        private string PathContent = null;
+        private string TimeContent = null;
 
         string folderPath = @"D:\DATA";
         string fileName = "DefultPathData.txt";
-        
+        string TimefileName = "DefultTimeData.txt";
+
 
         CreateFolder CF = new CreateFolder();
 
@@ -34,20 +36,28 @@ namespace SQL_Backup_Automation_System
             InitializeComponent();
             progressBar1.Hide();
             lblWarnig.Hide();
+           
 
             //To create the Folder and the text file to store the Defult data in the System
             try
             {
                 if (!Directory.Exists(folderPath))
                 {
-                    CF.CreateFolderAndFile(folderPath, fileName, content);
+                    CF.CreateFolderAndFile(folderPath, fileName, PathContent, TimefileName, TimeContent);
+                    Timecheck();
                 }
                 else
                 {
-                    string filePath = Path.Combine(folderPath, fileName);
-                    string data = File.ReadAllText(filePath);
-                    CF.CreateFolderAndFile(folderPath, fileName, data);
-                    content = data;
+                    string DefultfilePath = Path.Combine(folderPath, fileName);
+                    string DefultTimefile = Path.Combine(folderPath, TimefileName);
+
+                    string Pathdata = File.ReadAllText(DefultfilePath);
+                    string Timedata = File.ReadAllText(DefultTimefile);
+
+                    CF.CreateFolderAndFile(folderPath, fileName, Pathdata, TimefileName, Timedata);
+                    Timecheck();
+
+                    PathContent = Pathdata;
                 }
                 
             }
@@ -111,12 +121,10 @@ namespace SQL_Backup_Automation_System
             if (newTime == 0)
             {
                 timer.Interval = (int)TimeSpan.FromHours(3).TotalMilliseconds;
-                //MessageBox.Show("BackUp Automation Start After every 3 Houers!");
             }
             else
             {
                 timer.Interval = (int)TimeSpan.FromMinutes(newTime).TotalMilliseconds;
-                //MessageBox.Show("BackUp Automation Start After every " + newTime + " Houers!");
             }
 
             // Call the method to copy files
@@ -189,16 +197,47 @@ namespace SQL_Backup_Automation_System
                 if (settingsForm.ShowDialog() == DialogResult.OK)
                 {
                     // Retrieve the updated settings from SettingsForm
-                    content = settingsForm.model.SettingsFolderPath;
+                    PathContent = settingsForm.model.SettingsFolderPath;
                     newFilePath = settingsForm.model.SettingsFolderPath;
                     newTime = settingsForm.model.SettingsTime;
-                    CF.CreateFolderAndFile(folderPath, fileName, content);
+                    TimeContent = newTime.ToString();
+
+                    //Re Write the txtfile is there any changes in path and time
+                    CF.CreateFolderAndFile(folderPath, fileName, PathContent, TimefileName, TimeContent);
 
                     // Update UI or perform other actions with the new settings data
-                    MessageBox.Show($"Updated Settings: \nFile Path : {content}\n New Time : {newTime}");
-                    txtsourcePath.Text = content;
+                    MessageBox.Show($"Updated Settings: \nFile Path : {PathContent}\n New Time : {newTime}");
+                    txtsourcePath.Text = PathContent;
                     lblHeadline.Text = "**This system will automatically backup the \r\ndatabase in every " + newTime + " hours\r\ndon't close the application \r\nafter run**\r\n";
                 }
+            }
+        }
+
+        public void Timecheck()
+        {
+            string TimefilePath = Path.Combine(folderPath, TimefileName);
+
+            if (File.Exists(TimefilePath))
+            {
+                string t = File.ReadAllText(TimefilePath);
+                int newTime;
+
+                if (int.TryParse(t, out newTime) && newTime > 0)
+                {
+                    lblHeadline.Text = $"**This system will automatically backup the \r\ndatabase every {newTime} hours.\r\nDon't close the application \r\nafter it runs.**\r\n";
+                }
+                else
+                {
+                    // Handle case where parsing fails or newTime is not positive
+                    newTime = 3; // Default time
+                    lblHeadline.Text = "**This system will automatically backup the \r\ndatabase every 3 hours.\r\nDon't close the application \r\nafter it runs.**\r\n";
+                }
+            }
+            else
+            {
+                // Handle case where the file does not exist
+                newTime = 3; // Default time
+                lblHeadline.Text = "**This system will automatically backup the \r\ndatabase every 3 hours.\r\nDon't close the application \r\nafter it runs.**\r\n";
             }
         }
 
