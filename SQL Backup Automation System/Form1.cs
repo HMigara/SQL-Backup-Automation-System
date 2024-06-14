@@ -21,12 +21,40 @@ namespace SQL_Backup_Automation_System
         private Datamodel model = new Datamodel(); // Assuming Datamodel class is defined with SettingsTime and SettingsFolderPath properties
         private int newTime = 0;
         private string newFilePath;
+        string content = null;
+
+        string folderPath = @"D:\DATA";
+        string fileName = "DefultPathData.txt";
+        
+
+        CreateFolder CF = new CreateFolder();
 
         public Form1()
         {
             InitializeComponent();
             progressBar1.Hide();
             lblWarnig.Hide();
+
+            //To create the Folder and the text file to store the Defult data in the System
+            try
+            {
+                if (!Directory.Exists(folderPath))
+                {
+                    CF.CreateFolderAndFile(folderPath, fileName, content);
+                }
+                else
+                {
+                    string filePath = Path.Combine(folderPath, fileName);
+                    string data = File.ReadAllText(filePath);
+                    CF.CreateFolderAndFile(folderPath, fileName, data);
+                    content = data;
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}");
+            }
 
             // Set the start time to the desired time today
             startTime = DateTime.Today.AddHours(8).AddMinutes(30);
@@ -51,10 +79,18 @@ namespace SQL_Backup_Automation_System
 
         private void btnBrowsBK_Click(object sender, EventArgs e)
         {
-            if (newFilePath == null)
-            { txtsourcePath.Text = "\\\\192.168.2.113\\f$\\SQL_AUTO_Backup"; }
+            string filePath = Path.Combine(folderPath, fileName);
+            String DefultContent = File.ReadAllText(filePath);
+
+            if (string.IsNullOrEmpty(DefultContent))
+            {
+                MessageBox.Show("there is no defult file path yet Pleace set the Defult file path.");
+            }
             else
-            { txtsourcePath.Text = newFilePath; }
+            {
+                
+                txtsourcePath.Text = DefultContent; 
+            }
             
             lblWarnig.Hide();
         }
@@ -153,11 +189,14 @@ namespace SQL_Backup_Automation_System
                 if (settingsForm.ShowDialog() == DialogResult.OK)
                 {
                     // Retrieve the updated settings from SettingsForm
+                    content = settingsForm.model.SettingsFolderPath;
                     newFilePath = settingsForm.model.SettingsFolderPath;
-                    newTime = settingsForm.model.SettingsTime; 
+                    newTime = settingsForm.model.SettingsTime;
+                    CF.CreateFolderAndFile(folderPath, fileName, content);
 
                     // Update UI or perform other actions with the new settings data
-                    MessageBox.Show($"Updated Settings: \nFile Path : {newFilePath}\n New Time : {newTime}");
+                    MessageBox.Show($"Updated Settings: \nFile Path : {content}\n New Time : {newTime}");
+                    txtsourcePath.Text = content;
                     lblHeadline.Text = "**This system will automatically backup the \r\ndatabase in every " + newTime + " hours\r\ndon't close the application \r\nafter run**\r\n";
                 }
             }
